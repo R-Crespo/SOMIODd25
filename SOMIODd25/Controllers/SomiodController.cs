@@ -16,14 +16,19 @@ namespace SOMIODd25.Controllers
     public class SomiodController : ApiController
     {
         ApplicationsController applicationsController;
+        ContainersController containersController;
         XmlValidator validator;
 
         public SomiodController()
         {
             applicationsController = new ApplicationsController();
+            containersController = new ContainersController();
+
             validator = new XmlValidator();
         }
 
+
+        //APPLICATION
         [HttpGet]
         [Route("")]
         public IHttpActionResult DiscoverApplications()
@@ -49,13 +54,33 @@ namespace SOMIODd25.Controllers
         }
 
 
+        [HttpGet]
         [Route("{appName}")]
-        public IHttpActionResult GetApplication(string appName)
+        public IHttpActionResult GetApplicationOrDiscoverContainers(string appName)
         {
+            string discoverType = HttpContext.Current.Request.Headers["somiod-discover"];
+
             try
             {
-                string xmlData = applicationsController.GetApplication(appName);
-                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                if (!string.IsNullOrEmpty(discoverType))
+                {
+                    switch (discoverType)
+                    {
+                        case "container":
+                            // Discovery request to get all containers within the specified application
+                            string xmlDataContainers = containersController.GetAllContainers(appName);
+                            return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlDataContainers, "application/xml"));
+                        default:
+                            // If the discoverType is not recognized, return a Bad Request
+                            return BadRequest("Invalid somiod-discover header value");
+                    }
+                }
+                else
+                {
+                    // Standard request to get application details
+                    string xmlDataApplication = applicationsController.GetApplication(appName);
+                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlDataApplication, "application/xml"));
+                }
             }
             catch (Exception ex)
             {
@@ -150,5 +175,129 @@ namespace SOMIODd25.Controllers
                 return InternalServerError(ex);
             }
         }
+
+
+
+        //CONTAINER
+
+
+
+
+
+        [HttpGet]
+        [Route("{appName}/{containerName}")]
+        public IHttpActionResult GetContainer(string containerName)
+        {
+            try
+            {
+                string xmlData = containersController.GetContainer(containerName);
+                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+
+        [HttpPost]
+        [Route("{appName}")]
+        public IHttpActionResult PostContainer([FromBody] XElement containerXml)
+        {
+            if (validator.ValidateXML(containerXml.ToString()))
+            {
+                try
+                {
+                    if (containersController.PostContainer(containerXml.ToString()))
+                    {
+                        Container container = containersController.DeserializeContainer(containerXml.ToString());
+                        string xmlData = containersController.GetContainer(container.Name);
+                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
+                    }
+                    else
+                    {
+                        return BadRequest("Error while creating container");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return InternalServerError(ex);
+                }
+            }
+            else
+            {
+                string validationErrorMessage = "XML validation failed. The following issues were found:\n" + validator.ValidationMessage;
+                return BadRequest(validationErrorMessage);
+            }
+        }
+
+
+
+        [HttpPut]
+        [Route("{appName}/{containerName}")]
+        public IHttpActionResult PutContainer(string containerName, [FromBody] XElement containerXml)
+        {
+            if (validator.ValidateXML(containerXml.ToString()))
+            {
+                try
+                {
+                    if (containersController.PutContainer(containerName, containerXml.ToString()))
+                    {
+                        Container container = containersController.DeserializeContainer(containerXml.ToString());
+                        string xmlData = containersController.GetContainer(container.Name);
+                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return InternalServerError(ex);
+                }
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpDelete]
+        [Route("{appName}/{containerName}")]
+        public IHttpActionResult DeleteContainer(string appName, string containerName)
+        {
+
+            //Nao esta finalizado
+            //Quando uma application e eliminada deve se eliminar todos os dados dependentes desta
+            //Ou seja, eliminar a data, e as subscriptions
+            string xmlData = containersController.GetContainer(containerName);
+
+            try
+            {
+                // Assuming the ContainersController.DeleteContainer method returns true if the deletion is successful
+                if (containersController.DeleteContainer(containerName))
+                {
+                    // If deletion is successful, return HTTP 204 No Content as there's no content to return
+                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                }
+                else
+                {
+                    // If the container could not be found or deletion failed, return HTTP 404 Not Found
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                // In case of any exceptions, return HTTP 500 Internal Server Error with exception details
+                return InternalServerError(ex);
+            }
+        }
+
+
+
+
     }
+
+
 }
