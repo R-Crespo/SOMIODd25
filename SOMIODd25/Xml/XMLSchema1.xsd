@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<!-- Common Elements -->
+	<xs:element name="Id" type="xs:int"/>
+	<xs:element name="Name" type="xs:string"/>
+	<xs:element name="Creation_dt" type="xs:dateTime"/>
+	<xs:element name="Parent" type="xs:int"/>
+	<xs:element name="Content" type="xs:string"/>
+	<xs:element name="Event" type="xs:string"/>
+	<xs:element name="Endpoint" type="xs:string"/>
+
+	<!-- Application Type -->
+	<xs:complexType name="ApplicationType">
+		<xs:sequence>
+			<xs:element ref="Id" minOccurs="0"/>
+			<xs:element ref="Name"/>
+			<xs:element ref="Creation_dt" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Define Application as a top-level element -->
+	<xs:element name="Application" type="ApplicationType"/>
+
+	<!-- Container Type -->
+	<xs:complexType name="ContainerType">
+		<xs:sequence>
+			<xs:element ref="Id" minOccurs="0"/>
+			<xs:element ref="Name"/>
+			<xs:element ref="Creation_dt"/>
+			<xs:element ref="Parent" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Define Container as a top-level element -->
+	<xs:element name="Container" type="ContainerType"/>
+
+	<!-- Data Type -->
+	<xs:complexType name="DataType">
+		<xs:sequence>
+			<xs:element ref="Id" minOccurs="0"/>
+			<xs:element ref="Content" minOccurs="0"/>
+			<xs:element ref="Creation_dt"/>
+			<xs:element ref="Parent" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Define Data as a top-level element -->
+	<xs:element name="Data" type="DataType"/>
+	
+	<!-- Subscription Type -->
+	<xs:complexType name="SubscriptionType">
+		<xs:sequence>
+			<xs:element ref="Id" minOccurs="0"/>
+			<xs:element ref="Name"/>
+			<xs:element ref="Creation_dt"/>
+			<xs:element ref="Parent" minOccurs="0"/>
+			<xs:element ref="Event" minOccurs="0"/>
+			<xs:element ref="Endpoint" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Define Subscription as a top-level element -->
+	<xs:element name="Subscription" type="SubscriptionType"/>
+
+
+	<!-- Type for a List of Names -->
+	<xs:complexType name="NameListType">
+		<xs:sequence>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Define NameList as a top-level element -->
+	<xs:element name="NameList" type="NameListType"/>
+</xs:schema>
