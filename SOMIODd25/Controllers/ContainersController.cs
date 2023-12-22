@@ -79,7 +79,7 @@ namespace SOMIODd25.Controllers
         }
 
 
-        public string GetContainer(string name)
+        public string GetContainer(string appName, string containerName)
         {
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement containerElement = xmlDoc.CreateElement("Container");
@@ -89,19 +89,34 @@ namespace SOMIODd25.Controllers
                 try
                 {
                     conn.Open();
-                    using (SqlCommand command = new SqlCommand())
-                    {
-                        command.CommandText = "SELECT * FROM Containers WHERE name = @name";
-                        command.Parameters.AddWithValue("@name", name);
-                        command.CommandType = System.Data.CommandType.Text;
-                        command.Connection = conn;
-                        int id = 0;
 
+                    // First, get the application ID corresponding to appName
+                    int appId = 0;
+                    using (SqlCommand appCommand = new SqlCommand("SELECT Id FROM Applications WHERE Name = @appName", conn))
+                    {
+                        appCommand.Parameters.AddWithValue("@appName", appName);
+                        using (SqlDataReader appReader = appCommand.ExecuteReader())
+                        {
+                            if (appReader.Read())
+                            {
+                                appId = (int)appReader["Id"];
+                            }
+                            else
+                            {
+                                throw new KeyNotFoundException($"Application with name '{appName}' not found.");
+                            }
+                        }
+                    }
+
+                    // Now retrieve the container details
+                    using (SqlCommand command = new SqlCommand("SELECT * FROM Containers WHERE Name = @containerName AND Parent = @appId", conn))
+                    {
+                        command.Parameters.AddWithValue("@containerName", containerName);
+                        command.Parameters.AddWithValue("@appId", appId);
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                id = (int)reader["Id"];
                                 containerElement.SetAttribute("Id", reader["Id"].ToString());
                                 containerElement.SetAttribute("Name", reader["Name"].ToString());
                                 containerElement.SetAttribute("Creation_dt", ((DateTime)reader["Creation_dt"]).ToString("s")); //ISO 8601 format
@@ -109,11 +124,10 @@ namespace SOMIODd25.Controllers
                             }
                             else
                             {
-                                throw new KeyNotFoundException($"Container with name '{name}' not found.");
+                                throw new KeyNotFoundException($"Container '{containerName}' within application '{appName}' not found.");
                             }
                         }
                     }
-
                 }
                 catch (SqlException ex)
                 {
@@ -123,6 +137,7 @@ namespace SOMIODd25.Controllers
 
             return xmlDoc.OuterXml;
         }
+
 
         public bool PostContainer(string containerXml)
         {
