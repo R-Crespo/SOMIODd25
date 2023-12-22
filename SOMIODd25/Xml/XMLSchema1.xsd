@@ -37,10 +37,13 @@
 	<!-- Data Type -->
 	<xs:complexType name="DataType">
 		<xs:sequence>
-			<xs:element ref="Id" minOccurs="0"/>
-			<xs:element ref="Content" minOccurs="0"/>
-			<xs:element ref="Creation_dt"/>
-			<xs:element ref="Parent" minOccurs="0"/>
+			<xs:sequence>
+				<xs:element ref="Id" minOccurs="0"/>
+				<xs:element ref="Content"/>
+				<xs:element ref="Name" minOccurs="0"/>
+				<xs:element ref="Creation_dt" minOccurs="0"/>
+				<xs:element ref="Parent" minOccurs="0"/>
+			</xs:sequence>
 		</xs:sequence>
 	</xs:complexType>
 
