@@ -17,13 +17,14 @@ namespace SOMIODd25.Controllers
     {
         ApplicationsController applicationsController;
         ContainersController containersController;
+        DatasController datasController;
         XmlValidator validator;
 
         public SomiodController()
         {
             applicationsController = new ApplicationsController();
             containersController = new ContainersController();
-
+            datasController = new DatasController();
             validator = new XmlValidator();
         }
 
@@ -295,9 +296,109 @@ namespace SOMIODd25.Controllers
         }
 
 
+        //DATA
 
+        [HttpGet]
+        [Route("{appName}/{containerName}/data/{dataName}")]
+        public IHttpActionResult GetData(string dataName, string appName, string containerName)
+        {
+            try
+            {
+                string xmlData = datasController.GetData(dataName, appName, containerName);
+                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        [HttpPost]
+        [Route("{appName}/{containerName}/data")]
+        public IHttpActionResult PostData([FromBody] XElement dataXml, string appName, string containerName)
+        {
+            if (validator.ValidateXML(dataXml.ToString()))
+            {
+                try
+                {
+                    
+                    if (datasController.PostData(dataXml.ToString(), appName, containerName))
+                    {
+                        Data data = datasController.DeserializeData(dataXml.ToString());
+                        string xmlData = datasController.GetData(data.Name, appName, containerName);
+                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
+                    }
+                    else
+                    {
+                        return BadRequest("Error while creating application");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return InternalServerError(ex);
+                }
+            }
+            else
+            {
+                // If XML validation fails, provide a more descriptive error message
+                string validationErrorMessage = "XML validation failed. The following issues were found:\n";
+                validationErrorMessage += validator.ValidationMessage; // Use the validation message from your XmlValidator class
+                return BadRequest(validationErrorMessage);
+            }
+        }
+
+        [HttpPut]
+        [Route("{appName}/{containerName}/data/{dataName}")]
+        public IHttpActionResult PutData([FromBody] XElement dataXml, string dataName, string appName, string containerName)
+        {
+            if (validator.ValidateXML(dataXml.ToString()))
+            {
+                try
+                {
+                    if (datasController.PutData(dataName, dataXml.ToString(), appName, containerName))
+                    {
+                        Data data = datasController.DeserializeData(dataXml.ToString());
+                        string xmlData = datasController.GetData(dataName, appName, containerName);
+                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return InternalServerError(ex);
+                }
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpDelete]
+        [Route("{appName}/{containerName}/data/{dataName}")]
+        public IHttpActionResult DeleteData(string dataName, string appName, string containerName)
+        {
+            try
+            {
+                string xmlData = datasController.GetData(dataName, appName, containerName);
+                if (datasController.DeleteData(dataName, appName, containerName))
+                {
+                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
 
     }
-
 
 }
