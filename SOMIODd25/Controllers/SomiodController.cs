@@ -187,12 +187,29 @@ namespace SOMIODd25.Controllers
 
         [HttpGet]
         [Route("{appName}/{containerName}")]
-        public IHttpActionResult GetContainer(string appName, string containerName)
+        public IHttpActionResult GetContainerOrDiscoverData(string appName, string containerName)
         {
+            string discoverType = HttpContext.Current.Request.Headers["somiod-discover"];
             try
             {
-                string xmlData = containersController.GetContainer(appName, containerName);
-                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                if (!string.IsNullOrEmpty(discoverType))
+                {
+                    switch (discoverType)
+                    {
+                        case "data":
+                            // Discovery request to get all data within the specified container
+                            string xmlContainerData = datasController.GetAllData(appName, containerName);
+                            return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlContainerData, "application/xml"));
+                        default:
+                            // If the discoverType is not recognized, return a Bad Request
+                            return BadRequest("Invalid somiod-discover header value");
+                    }
+                }
+                else
+                {
+                    string xmlData = containersController.GetContainer(containerName);
+                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                }
             }
             catch (Exception ex)
             {

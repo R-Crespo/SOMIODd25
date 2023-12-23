@@ -18,6 +18,59 @@ namespace SOMIODd25.Controllers
     {
         string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["SOMIODdb.Properties.Settings.ConnStr"].ConnectionString;
 
+        public string GetAllData(string appName, string containerName)
+        {
+            List<string> dataNames = new List<string>();
+            using(SqlConnection conn = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    var (appExists, containerId) = VerifyAppAndContainer(appName, containerName);
+                    if (!appExists)
+                    {
+                        throw new KeyNotFoundException("Application not found.");
+                    }
+                    if (containerId == 0)
+                    {
+                        throw new KeyNotFoundException("Container not found or does not belong to the application.");
+                    }
+                    string query = "SELECT  name FROM Datas d WHERE d.parent = @container ORDER BY d.id";
+                    using (SqlCommand command = new SqlCommand(query, conn))
+                    {
+                        command.Parameters.AddWithValue("@container", containerId);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                dataNames.Add(reader["name"].ToString());
+                            }
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    throw new InvalidOperationException("Error occurred while retriving all data", ex);
+                }
+            }
+            // Create an XML string with application names
+            XmlDocument xmlDoc = new XmlDocument();
+            XmlElement root = xmlDoc.CreateElement("Data");
+            xmlDoc.AppendChild(root);
+
+            XmlElement nameList = xmlDoc.CreateElement("NameList");
+            root.AppendChild(nameList);
+            foreach (var dataName in dataNames)
+            {
+                XmlElement nameElement = xmlDoc.CreateElement("name");
+                nameElement.InnerText = dataName;
+                nameList.AppendChild(nameElement);
+            }
+
+            // To return the XML document as a string, use OuterXml property
+            return xmlDoc.OuterXml;
+        }
+
         public string GetData(string data, string appName, string containerName)
         {
             XmlDocument doc = new XmlDocument();
