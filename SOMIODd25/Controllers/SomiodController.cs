@@ -207,7 +207,7 @@ namespace SOMIODd25.Controllers
                 }
                 else
                 {
-                    string xmlData = containersController.GetContainer(containerName);
+                    string xmlData = containersController.GetContainer(appName ,containerName);
                     return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
                 }
             }
