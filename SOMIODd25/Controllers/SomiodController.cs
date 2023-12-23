@@ -220,7 +220,7 @@ namespace SOMIODd25.Controllers
 
         [HttpPost]
         [Route("{appName}")]
-        public IHttpActionResult PostContainer([FromBody] XElement containerXml)
+        public IHttpActionResult PostContainer(string appName, [FromBody] XElement containerXml)
         {
             if (validator.ValidateXML(containerXml.ToString()))
             {
@@ -229,7 +229,7 @@ namespace SOMIODd25.Controllers
                     if (containersController.PostContainer(containerXml.ToString()))
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
-                        string xmlData = containersController.GetContainer(container.Name);
+                        string xmlData = containersController.GetContainer(appName, container.Name);
                         return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
                     }
                     else
@@ -250,10 +250,9 @@ namespace SOMIODd25.Controllers
         }
 
 
-
         [HttpPut]
         [Route("{appName}/{containerName}")]
-        public IHttpActionResult PutContainer(string containerName, [FromBody] XElement containerXml)
+        public IHttpActionResult PutContainer(string appName, string containerName, [FromBody] XElement containerXml)
         {
             if (validator.ValidateXML(containerXml.ToString()))
             {
@@ -262,7 +261,7 @@ namespace SOMIODd25.Controllers
                     if (containersController.PutContainer(containerName, containerXml.ToString()))
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
-                        string xmlData = containersController.GetContainer(container.Name);
+                        string xmlData = containersController.GetContainer(appName, container.Name);
                         return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
                     }
                     else
@@ -289,7 +288,7 @@ namespace SOMIODd25.Controllers
             //Nao esta finalizado
             //Quando uma application e eliminada deve se eliminar todos os dados dependentes desta
             //Ou seja, eliminar a data, e as subscriptions
-            string xmlData = containersController.GetContainer(containerName);
+            string xmlData = containersController.GetContainer(appName, containerName);
 
             try
             {
