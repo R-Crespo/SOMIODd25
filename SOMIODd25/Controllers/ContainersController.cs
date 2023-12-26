@@ -139,7 +139,7 @@ namespace SOMIODd25.Controllers
         }
 
 
-        public bool PostContainer(string containerXml)
+        public bool PostContainer(string containerXml, string appName)
         {
             Container container = null;
             try
@@ -156,7 +156,7 @@ namespace SOMIODd25.Controllers
                 throw new ArgumentException("The deserialized container is null.");
             }
 
-            if (string.IsNullOrWhiteSpace(container.Name) || container.Parent <= 0)
+            if (string.IsNullOrWhiteSpace(container.Name))
             {
                 throw new ArgumentException("Invalid container data: Name and Parent are required.");
             }
@@ -166,12 +166,17 @@ namespace SOMIODd25.Controllers
                 try
                 {
                     conn.Open();
+                    var (appExists, appId) = VerifyApp(appName);
+                    if (!appExists)
+                    {
+                        throw new KeyNotFoundException("Application not found.");
+                    }
                     string query = "INSERT INTO Containers(Name, Creation_dt, Parent) VALUES (@name, @creation_dt, @parent)";
                     using (SqlCommand command = new SqlCommand(query, conn))
                     {
                         command.Parameters.AddWithValue("@name", container.Name);
                         command.Parameters.AddWithValue("@creation_dt", System.DateTime.UtcNow);
-                        command.Parameters.AddWithValue("@parent", container.Parent);
+                        command.Parameters.AddWithValue("@parent", appId);
 
                         int rowsAffected = command.ExecuteNonQuery();
                         return rowsAffected > 0;
@@ -184,7 +189,7 @@ namespace SOMIODd25.Controllers
             }
         }
 
-        public bool PutContainer(string name, string containerXml)
+        public bool PutContainer(string appName ,string containerName, string containerXml)
         {
             Container container = null;
             try
@@ -203,13 +208,17 @@ namespace SOMIODd25.Controllers
                 try
                 {
                     conn.Open();
-                    string query = "UPDATE Containers SET Creation_dt = @creation_dt WHERE Name = @name";
+                    var (appExists, appId) = VerifyApp(appName);
+                    if (!appExists)
+                    {
+                        throw new KeyNotFoundException("Application not found.");
+                    }
+                    string query = "UPDATE Containers SET Creation_dt = @creation_dt WHERE Name = @name AND Parent = @parent";
                     using (SqlCommand command = new SqlCommand(query, conn))
                     {
-                        command.Parameters.AddWithValue("@newName", container.Name);
                         command.Parameters.AddWithValue("@creation_dt", container.Creation_dt);
-                        command.Parameters.AddWithValue("@parent", container.Parent);
-                        command.Parameters.AddWithValue("@name", name);
+                        command.Parameters.AddWithValue("@parent", appId);
+                        command.Parameters.AddWithValue("@name", containerName);
 
                         int rowsAffected = command.ExecuteNonQuery();
                         return rowsAffected > 0;
@@ -222,17 +231,23 @@ namespace SOMIODd25.Controllers
             }
         }
 
-        public bool DeleteContainer(string name)
+        public bool DeleteContainer(string appName, string containerName)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 try
                 {
                     conn.Open();
-                    string query = "DELETE FROM Containers WHERE Name = @name";
+                    var (appExists, appId) = VerifyApp(appName);
+                    if (!appExists)
+                    {
+                        throw new KeyNotFoundException("Application not found.");
+                    }
+                    string query = "DELETE FROM Containers WHERE Name = @name Parent = @parent";
                     using (SqlCommand command = new SqlCommand(query, conn))
                     {
-                        command.Parameters.AddWithValue("@name", name);
+                        command.Parameters.AddWithValue("@name", containerName);
+                        command.Parameters.AddWithValue("@parent", appId);
                         int rowsAffected = command.ExecuteNonQuery();
                         return rowsAffected > 0;
                     }
@@ -240,6 +255,31 @@ namespace SOMIODd25.Controllers
                 catch (SqlException ex)
                 {
                     throw new InvalidOperationException("Error occurred while deleting container", ex);
+                }
+            }
+        }
+
+        private (bool appExists, int appId) VerifyApp(string appName)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Query to check if the application exists and get its ID
+                string appQuery = "SELECT Id FROM Applications WHERE Name = @appName";
+                using (SqlCommand appCommand = new SqlCommand(appQuery, conn))
+                {
+                    appCommand.Parameters.AddWithValue("@appName", appName);
+                    object appResult = appCommand.ExecuteScalar();
+
+                    if (appResult == null)
+                    {
+                        throw new KeyNotFoundException("Application does not exist.");
+                    }
+
+                    int appId = Convert.ToInt32(appResult);
+
+                    return (true, appId);
                 }
             }
         }
