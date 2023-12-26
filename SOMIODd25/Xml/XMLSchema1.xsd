@@ -25,7 +25,7 @@
 	<xs:complexType name="ContainerType">
 		<xs:sequence>
 			<xs:element ref="Id" minOccurs="0"/>
-			<xs:element ref="Name"/>
+			<xs:element ref="Name" minOccurs="0"/>
 			<xs:element ref="Creation_dt" minOccurs="0"/>
 			<xs:element ref="Parent" minOccurs="0"/>
 		</xs:sequence>

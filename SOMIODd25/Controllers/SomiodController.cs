@@ -226,7 +226,7 @@ namespace SOMIODd25.Controllers
             {
                 try
                 {
-                    if (containersController.PostContainer(containerXml.ToString()))
+                    if (containersController.PostContainer(containerXml.ToString(), appName))
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
                         string xmlData = containersController.GetContainer(appName, container.Name);
@@ -258,15 +258,15 @@ namespace SOMIODd25.Controllers
             {
                 try
                 {
-                    if (containersController.PutContainer(containerName, containerXml.ToString()))
+                    if (containersController.PutContainer(appName ,containerName, containerXml.ToString()))
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
-                        string xmlData = containersController.GetContainer(appName, container.Name);
+                        string xmlData = containersController.GetContainer(appName, containerName);
                         return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
                     }
                     else
                     {
-                        return BadRequest();
+                        return BadRequest("Error while updating Container");
                     }
                 }
                 catch (Exception ex)
@@ -293,7 +293,7 @@ namespace SOMIODd25.Controllers
             try
             {
                 // Assuming the ContainersController.DeleteContainer method returns true if the deletion is successful
-                if (containersController.DeleteContainer(containerName))
+                if (containersController.DeleteContainer(appName, containerName))
                 {
                     // If deletion is successful, return HTTP 204 No Content as there's no content to return
                     return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
@@ -346,7 +346,7 @@ namespace SOMIODd25.Controllers
                     }
                     else
                     {
-                        return BadRequest("Error while creating application");
+                        return BadRequest("Error while creating Data");
                     }
                 }
                 catch (Exception ex)
@@ -360,36 +360,6 @@ namespace SOMIODd25.Controllers
                 string validationErrorMessage = "XML validation failed. The following issues were found:\n";
                 validationErrorMessage += validator.ValidationMessage; // Use the validation message from your XmlValidator class
                 return BadRequest(validationErrorMessage);
-            }
-        }
-
-        [HttpPut]
-        [Route("{appName}/{containerName}/data/{dataName}")]
-        public IHttpActionResult PutData([FromBody] XElement dataXml, string dataName, string appName, string containerName)
-        {
-            if (validator.ValidateXML(dataXml.ToString()))
-            {
-                try
-                {
-                    if (datasController.PutData(dataName, dataXml.ToString(), appName, containerName))
-                    {
-                        Data data = datasController.DeserializeData(dataXml.ToString());
-                        string xmlData = datasController.GetData(dataName, appName, containerName);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
-                    }
-                    else
-                    {
-                        return BadRequest();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
-            }
-            else
-            {
-                return BadRequest();
             }
         }
 

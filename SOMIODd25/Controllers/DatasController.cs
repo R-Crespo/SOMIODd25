@@ -126,47 +126,6 @@ namespace SOMIODd25.Controllers
             }
         }
 
-        public bool PutData(string dataName, string dataXml, string appName, string containerName)
-        {
-            Data data = null;
-            try
-            {
-                data = DeserializeData(dataXml);
-            }
-            catch
-            {
-                throw;
-            }
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                try
-                {
-                    conn.Open();
-                    var (appExists, containerId) = VerifyAppAndContainer(appName, containerName);
-                    if (!appExists)
-                    {
-                        throw new KeyNotFoundException("Application not found.");
-                    }
-                    if (containerId == 0)
-                    {
-                        throw new KeyNotFoundException("Container not found or does not belong to the application.");
-                    }
-                    string str = "UPDATE Datas SET content = @content WHERE name = @name AND parent = @parent";
-                    using (SqlCommand command = new SqlCommand(str, conn))
-                    {
-                        command.Parameters.AddWithValue("@content", data.Content);
-                        command.Parameters.AddWithValue("@name", dataName);
-                        command.Parameters.AddWithValue("@parent", containerId);
-                        command.ExecuteNonQuery();
-                    }
-                }
-                catch (SqlException ex)
-                {
-                    throw new InvalidOperationException("Error occurred while updating application", ex);
-                }
-            }
-            return true;
-        }
         public bool PostData([FromBody] string dataXml, string appName ,string containerName)
         {
             Data data = null;
