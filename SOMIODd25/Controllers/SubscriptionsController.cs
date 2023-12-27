@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Web.Http;
 
 namespace SOMIODd25.Controllers
 {
@@ -70,8 +71,8 @@ namespace SOMIODd25.Controllers
         public string GetSubscription(string subscription, string appName, string containerName)
         {
             XmlDocument doc = new XmlDocument();
-            XmlElement dataElement = doc.CreateElement("Subscription");
-            doc.AppendChild(dataElement);
+            XmlElement element = doc.CreateElement("Subscription");
+            doc.AppendChild(element);
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 try
@@ -99,12 +100,12 @@ namespace SOMIODd25.Controllers
                             if (reader.Read())
                             {
                                 id = (int)reader["Id"];
-                                dataElement.SetAttribute("Id", reader["Id"].ToString());
-                                dataElement.SetAttribute("Name", reader["Name"].ToString());
-                                dataElement.SetAttribute("Creation_dt", ((DateTime)reader["Creation_dt"]).ToString("s"));
-                                dataElement.SetAttribute("Parent", reader["Parent"].ToString());
-                                dataElement.SetAttribute("Event", reader["Event"].ToString());
-                                dataElement.SetAttribute("Endpoint", reader["Endpoint"].ToString());
+                                element.SetAttribute("Id", reader["Id"].ToString());
+                                element.SetAttribute("Name", reader["Name"].ToString());
+                                element.SetAttribute("Creation_dt", ((DateTime)reader["Creation_dt"]).ToString("s"));
+                                element.SetAttribute("Parent", reader["Parent"].ToString());
+                                element.SetAttribute("Event", reader["Event"].ToString());
+                                element.SetAttribute("Endpoint", reader["Endpoint"].ToString());
 
                             }
                             else
@@ -124,7 +125,7 @@ namespace SOMIODd25.Controllers
         }
 
 
-        public bool PostSubscrition(string subsXml)
+        public bool PostSubscrition(string subsXml, string appName, string containerName)
         {
             Subscription subscription = null;
             try
@@ -141,9 +142,9 @@ namespace SOMIODd25.Controllers
                 throw new ArgumentException("The deserialized subscription is null.");
             }
 
-            if (string.IsNullOrWhiteSpace(subscription.Name) || subscription.Parent <= 0)
+            if (string.IsNullOrWhiteSpace(subscription.Name) || string.IsNullOrWhiteSpace(subscription.Endpoint) || string.IsNullOrWhiteSpace(subscription.Event))
             {
-                throw new ArgumentException("Invalid subscription data: Name and Parent are required.");
+                throw new ArgumentException("Invalid subscription data: Name, Endpoint and Event are required.");
             }
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -151,12 +152,22 @@ namespace SOMIODd25.Controllers
                 try
                 {
                     conn.Open();
+                    var (appExists, containerId) = VerifyAppAndContainer(appName, containerName);
+                    if (!appExists)
+                    {
+                        throw new KeyNotFoundException("Application not found.");
+                    }
+                    if (containerId == 0)
+                    {
+                        throw new KeyNotFoundException("Container not found or does not belong to the application.");
+                    }
+
                     string query = "INSERT INTO subscriptions(Name, Creation_dt, Parent, Event, Endpoint) VALUES (@name, @creation_dt, @parent, @event, @endpoint)";
                     using (SqlCommand command = new SqlCommand(query, conn))
                     {
                         command.Parameters.AddWithValue("@name", subscription.Name);
                         command.Parameters.AddWithValue("@creation_dt", System.DateTime.UtcNow);
-                        command.Parameters.AddWithValue("@parent", subscription.Parent);
+                        command.Parameters.AddWithValue("@parent", containerId);
                         command.Parameters.AddWithValue("@event", subscription.Event);
                         command.Parameters.AddWithValue("@endpoint", subscription.Endpoint);
 
@@ -170,17 +181,27 @@ namespace SOMIODd25.Controllers
                 }
             }
         }
-        public bool DeleteSubscrition(string name)
+        public bool DeleteSubscrition(string name, string appName, string containerName)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 try
                 {
                     conn.Open();
-                    string query = "DELETE FROM subscriptions WHERE Name = @name";
+                    var (appExists, containerId) = VerifyAppAndContainer(appName, containerName);
+                    if (!appExists)
+                    {
+                        throw new KeyNotFoundException("Application not found.");
+                    }
+                    if (containerId == 0)
+                    {
+                        throw new KeyNotFoundException("Container not found or does not belong to the application.");
+                    }
+                    string query = "DELETE FROM subscriptions WHERE Name = @name AND parent = @parent";
                     using (SqlCommand command = new SqlCommand(query, conn))
                     {
                         command.Parameters.AddWithValue("@name", name);
+                        command.Parameters.AddWithValue("@parent", containerId);
                         int rowsAffected = command.ExecuteNonQuery();
                         return rowsAffected > 0;
                     }
