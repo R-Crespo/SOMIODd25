@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SOMIOD Middleware service - Group D25</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <div>
+        <h2>All Applications</h2>
+        <ul id="apps" />
+    </div>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Make the AJAX call to the discover endpoint
+            $.ajax({
+                url: 'http://localhost:55921/api/somiod', // Update this URL to your API's discover endpoint
+                type: 'GET',
+                headers: {
+                    'Accept': 'application/xml',
+                    'somiod-discover': 'application' // Set the appropriate headers for discovery
+                },
+                success: function (xml) {
+                    // Parse the names from the XML
+                    $(xml).find('name').each(function () { // The element is 'name', not 'Name'
+                        var appName = $(this).text();
+                        // Append each application name to the list
+                        $('#apps').append($('<li>').text(appName));
+                    });
+                },
+                error: function (xhr, status, error) {
+                    // Handle any errors here
+                    $('#apps').append($('<li>').text('Error retrieving applications.'));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

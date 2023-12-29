@@ -12,6 +12,8 @@ using System.Xml.Linq;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 using System.Text;
+using System.Xml;
+using System.Data.SqlTypes;
 
 namespace SOMIODd25.Controllers
 {
@@ -43,16 +45,21 @@ namespace SOMIODd25.Controllers
             string discoverType = HttpContext.Current.Request.Headers["somiod-discover"];
             try
             {
-                string xmlData;
+                string xmlString;
                 switch (discoverType)
                 {
                     case "application":
-                        xmlData = applicationsController.GetAllApplications();
+                        xmlString = applicationsController.GetAllApplications();
                         break;
                     default:
                         return BadRequest("Missing or invalid somiod-discover header");
                 }
-                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(xmlString, Encoding.UTF8, "application/xml")
+                };
+                return ResponseMessage(response);
             }
             catch (Exception ex)
             {
@@ -76,7 +83,12 @@ namespace SOMIODd25.Controllers
                         case "container":
                             // Discovery request to get all containers within the specified application
                             string xmlDataContainers = containersController.GetAllContainers(appName);
-                            return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlDataContainers, "application/xml"));
+
+                            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                            {
+                                Content = new StringContent(xmlDataContainers, Encoding.UTF8, "application/xml")
+                            };
+                            return ResponseMessage(response);
                         default:
                             // If the discoverType is not recognized, return a Bad Request
                             return BadRequest("Invalid somiod-discover header value");
@@ -86,7 +98,11 @@ namespace SOMIODd25.Controllers
                 {
                     // Standard request to get application details
                     string xmlDataApplication = applicationsController.GetApplication(appName);
-                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlDataApplication, "application/xml"));
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(xmlDataApplication, Encoding.UTF8, "application/xml")
+                    };
+                    return ResponseMessage(response);
                 }
             }
             catch (Exception ex)
@@ -106,7 +122,11 @@ namespace SOMIODd25.Controllers
                     {
                         Application app = applicationsController.DeserializeApplication(appXml.ToString());
                         string xmlData = applicationsController.GetApplication(app.Name);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                        {
+                            Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                        };
+                        return ResponseMessage(response);
                     }
                     else
                     {
@@ -144,7 +164,11 @@ namespace SOMIODd25.Controllers
                     {
                         Application app = applicationsController.DeserializeApplication(appXml.ToString());
                         string xmlData = applicationsController.GetApplication(app.Name);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                        {
+                            Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                        };
+                        return ResponseMessage(response);
                     }
                     else
                     {
@@ -170,7 +194,11 @@ namespace SOMIODd25.Controllers
                 string xmlData = applicationsController.GetApplication(appName);
                 if (applicationsController.DeleteApplication(appName))
                 {
-                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                    };
+                    return ResponseMessage(response);
                 }
                 else
                 {
@@ -198,7 +226,12 @@ namespace SOMIODd25.Controllers
                         case "data":
                             // Discovery request to get all data within the specified container
                             string xmlContainerData = datasController.GetAllData(appName, containerName);
-                            return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlContainerData, "application/xml"));
+
+                            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                            {
+                                Content = new StringContent(xmlContainerData, Encoding.UTF8, "application/xml")
+                            };
+                            return ResponseMessage(response);
                         default:
                             // If the discoverType is not recognized, return a Bad Request
                             return BadRequest("Invalid somiod-discover header value");
@@ -207,7 +240,11 @@ namespace SOMIODd25.Controllers
                 else
                 {
                     string xmlData = containersController.GetContainer(appName ,containerName);
-                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                    };
+                    return ResponseMessage(response);
                 }
             }
             catch (Exception ex)
@@ -229,7 +266,12 @@ namespace SOMIODd25.Controllers
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
                         string xmlData = containersController.GetContainer(appName, container.Name);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
+
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                        {
+                            Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                        };
+                        return ResponseMessage(response);
                     }
                     else
                     {
@@ -261,7 +303,12 @@ namespace SOMIODd25.Controllers
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
                         string xmlData = containersController.GetContainer(appName, containerName);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                        {
+                            Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                        };
+                        return ResponseMessage(response);
                     }
                     else
                     {
@@ -295,7 +342,12 @@ namespace SOMIODd25.Controllers
                 if (containersController.DeleteContainer(appName, containerName))
                 {
                     // If deletion is successful, return HTTP 204 No Content as there's no content to return
-                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                    };
+                    return ResponseMessage(response);
                 }
                 else
                 {
@@ -318,7 +370,12 @@ namespace SOMIODd25.Controllers
             try
             {
                 string xmlData = subscriptionsController.GetSubscription(subsName, appName, containerName);
-                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                };
+                return ResponseMessage(response);
             }
             catch (Exception ex)
             {
@@ -339,7 +396,12 @@ namespace SOMIODd25.Controllers
                     {
                         Subscription subs = subscriptionsController.DeserializeSubscrition(subsXml.ToString());
                         string xmlSubs = subscriptionsController.GetSubscription(subs.Name, appName, containerName);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlSubs, "application/xml"));
+
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                        {
+                            Content = new StringContent(xmlSubs, Encoding.UTF8, "application/xml")
+                        };
+                        return ResponseMessage(response);
                     }
                     else
                     {
@@ -369,7 +431,11 @@ namespace SOMIODd25.Controllers
                 string xmlSubs = subscriptionsController.GetSubscription(subsName, appName, containerName);
                 if (subscriptionsController.DeleteSubscrition(subsName, appName, containerName))
                 {
-                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlSubs, "application/xml"));
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(xmlSubs, Encoding.UTF8, "application/xml")
+                    };
+                    return ResponseMessage(response);
                 }
                 else
                 {
@@ -382,6 +448,7 @@ namespace SOMIODd25.Controllers
             }
         }
 
+
         //DATA
         [HttpGet]
         [Route("{appName}/{containerName}/data/{dataName}")]
@@ -390,7 +457,12 @@ namespace SOMIODd25.Controllers
             try
             {
                 string xmlData = datasController.GetData(dataName, appName, containerName);
-                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                };
+                return ResponseMessage(response);
             }
             catch (Exception ex)
             {
@@ -403,49 +475,25 @@ namespace SOMIODd25.Controllers
         public IHttpActionResult PostData([FromBody] XElement dataXml, string appName, string containerName)
         {
             if (validator.ValidateXML(dataXml.ToString()))
-        [HttpGet]
-        [Route("{appName}/{containerName}/subscription/{subsName}")]
-        public IHttpActionResult GetData(string subsName, string appName, string containerName)
-        {
-            try
-            {
-                string xmlData = subscriptionsController.GetSubscription(subsName, appName, containerName);
-                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-        }
-
-        [HttpPost]
-        [Route("{appName}/{containerName}/subscription")]
-        public IHttpActionResult PostData([FromBody] XElement subsXml, string appName, string containerName)
-        {
-            if (validator.ValidateXML(subsXml.ToString()))
             {
                 try
                 {
-                    
+
                     if (datasController.PostData(dataXml.ToString(), appName, containerName))
                     {
                         Data data = datasController.DeserializeData(dataXml.ToString());
                         string xmlData = datasController.GetData(data.Name, appName, containerName);
                         PublishToMqtt(containerName, data.Content);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
+
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                        {
+                            Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                        };
+                        return ResponseMessage(response);
                     }
                     else
                     {
                         return BadRequest("Error while creating Data");
-                    if (subscriptionsController.PostSubscrition(subsXml.ToString(), appName, containerName))
-                    {
-                        Subscription subs = subscriptionsController.DeserializeSubscrition(subsXml.ToString());
-                        string xmlSubs = subscriptionsController.GetSubscription(subs.Name, appName, containerName);
-                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlSubs, "application/xml"));
-                    }
-                    else
-                    {
-                        return BadRequest("Failed to create Subscrition");
                     }
                 }
                 catch (Exception ex)
@@ -471,7 +519,12 @@ namespace SOMIODd25.Controllers
                 string xmlData = datasController.GetData(dataName, appName, containerName);
                 if (datasController.DeleteData(dataName, appName, containerName))
                 {
-                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(xmlData, Encoding.UTF8, "application/xml")
+                    };
+                    return ResponseMessage(response);
                 }
                 else
                 {
