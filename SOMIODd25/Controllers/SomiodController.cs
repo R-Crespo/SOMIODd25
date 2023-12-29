@@ -19,12 +19,15 @@ namespace SOMIODd25.Controllers
         ContainersController containersController;
         DatasController datasController;
         XmlValidator validator;
+                SubscriptionsController subscriptionsController;
 
         public SomiodController()
         {
             applicationsController = new ApplicationsController();
             containersController = new ContainersController();
             datasController = new DatasController();
+            subscriptionsController = new SubscriptionsController();
+
             validator = new XmlValidator();
         }
 
@@ -311,6 +314,7 @@ namespace SOMIODd25.Controllers
             }
         }
 
+        //SUBSCRIPTION
 
         //DATA
 
@@ -334,6 +338,26 @@ namespace SOMIODd25.Controllers
         public IHttpActionResult PostData([FromBody] XElement dataXml, string appName, string containerName)
         {
             if (validator.ValidateXML(dataXml.ToString()))
+        [HttpGet]
+        [Route("{appName}/{containerName}/subscription/{subsName}")]
+        public IHttpActionResult GetData(string subsName, string appName, string containerName)
+        {
+            try
+            {
+                string xmlData = subscriptionsController.GetSubscription(subsName, appName, containerName);
+                return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlData, "application/xml"));
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        [HttpPost]
+        [Route("{appName}/{containerName}/subscription")]
+        public IHttpActionResult PostData([FromBody] XElement subsXml, string appName, string containerName)
+        {
+            if (validator.ValidateXML(subsXml.ToString()))
             {
                 try
                 {
@@ -347,6 +371,15 @@ namespace SOMIODd25.Controllers
                     else
                     {
                         return BadRequest("Error while creating Data");
+                    if (subscriptionsController.PostSubscrition(subsXml.ToString(), appName, containerName))
+                    {
+                        Subscription subs = subscriptionsController.DeserializeSubscrition(subsXml.ToString());
+                        string xmlSubs = subscriptionsController.GetSubscription(subs.Name, appName, containerName);
+                        return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlSubs, "application/xml"));
+                    }
+                    else
+                    {
+                        return BadRequest("Failed to create Subscrition");
                     }
                 }
                 catch (Exception ex)
@@ -355,11 +388,12 @@ namespace SOMIODd25.Controllers
                 }
             }
             else
-            {
-                // If XML validation fails, provide a more descriptive error message
-                string validationErrorMessage = "XML validation failed. The following issues were found:\n";
-                validationErrorMessage += validator.ValidationMessage; // Use the validation message from your XmlValidator class
-                return BadRequest(validationErrorMessage);
+                {
+                    // If XML validation fails, provide a more descriptive error message
+                    string validationErrorMessage = "XML validation failed. The following issues were found:\n";
+                    validationErrorMessage += validator.ValidationMessage; // Use the validation message from your XmlValidator class
+                    return BadRequest(validationErrorMessage);
+                }
             }
         }
 
@@ -385,6 +419,27 @@ namespace SOMIODd25.Controllers
             }
         }
 
+        [HttpDelete]
+        [Route("{appName}/{containerName}/subscription/{subsName}")]
+        public IHttpActionResult DeleteData(string subsName, string appName, string containerName)
+        {
+            try
+            {
+                string xmlSubs = subscriptionsController.GetSubscription(subsName, appName, containerName);
+                if (subscriptionsController.DeleteSubscrition(subsName, appName, containerName))
+                {
+                    return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.OK, xmlSubs, "application/xml"));
+                }
+                else
+                {
+                    return BadRequest("Failed to delete Subscrition");
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
     }
-
+}
 }
