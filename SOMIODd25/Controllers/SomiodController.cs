@@ -9,6 +9,9 @@ using System.Web.Http.Results;
 using SOMIODd25.Models;
 using SOMIODd25.Xml;
 using System.Xml.Linq;
+using uPLibrary.Networking.M2Mqtt;
+using uPLibrary.Networking.M2Mqtt.Messages;
+using System.Text;
 
 namespace SOMIODd25.Controllers
 {
@@ -342,6 +345,7 @@ namespace SOMIODd25.Controllers
                     {
                         Data data = datasController.DeserializeData(dataXml.ToString());
                         string xmlData = datasController.GetData(data.Name, appName, containerName);
+                        PublishToMqtt(containerName, data.Content);
                         return new ResponseMessageResult(Request.CreateResponse(HttpStatusCode.Created, xmlData, "application/xml"));
                     }
                     else
@@ -385,6 +389,31 @@ namespace SOMIODd25.Controllers
             }
         }
 
+        private void PublishToMqtt(string topic, string message)
+        {
+            MqttClient client = new MqttClient(IPAddress.Parse("127.0.0.1")); // Replace with your MQTT broker address
+
+            try
+            {
+                client.Connect(Guid.NewGuid().ToString());
+                if (client.IsConnected)
+                {
+                    client.Publish(topic, Encoding.UTF8.GetBytes(message));
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions here
+                Console.WriteLine("Error in MQTT Publish: " + ex.Message);
+            }
+            finally
+            {
+                if (client.IsConnected)
+                {
+                    client.Disconnect();
+                }
+            }
+        }
     }
 
 }
