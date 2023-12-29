@@ -144,7 +144,7 @@ namespace SOMIODd25.Controllers
 
             if (string.IsNullOrWhiteSpace(subscription.Name) || string.IsNullOrWhiteSpace(subscription.Endpoint) || string.IsNullOrWhiteSpace(subscription.Event))
             {
-                throw new ArgumentException("Invalid subscription data: Name, Endpoint and Event are required.");
+                throw new ArgumentException("Invalid subscription: Name, Endpoint and Event are required.");
             }
 
             using (SqlConnection conn = new SqlConnection(connectionString))

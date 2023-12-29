@@ -300,7 +300,7 @@ namespace SOMIODd25.Controllers
 
         [HttpGet]
         [Route("{appName}/{containerName}/subscription/{subsName}")]
-        public IHttpActionResult GetData(string subsName, string appName, string containerName)
+        public IHttpActionResult GetSubscription(string subsName, string appName, string containerName)
         {
             try
             {
@@ -315,7 +315,7 @@ namespace SOMIODd25.Controllers
 
         [HttpPost]
         [Route("{appName}/{containerName}/subscription")]
-        public IHttpActionResult PostData([FromBody] XElement subsXml, string appName, string containerName)
+        public IHttpActionResult PostSubscription([FromBody] XElement subsXml, string appName, string containerName)
         {
             if (validator.ValidateXML(subsXml.ToString()))
             {
@@ -349,7 +349,7 @@ namespace SOMIODd25.Controllers
 
         [HttpDelete]
         [Route("{appName}/{containerName}/subscription/{subsName}")]
-        public IHttpActionResult DeleteData(string subsName, string appName, string containerName)
+        public IHttpActionResult DeleteSubscription(string subsName, string appName, string containerName)
         {
             try
             {
