@@ -23,8 +23,8 @@ namespace SOMIODd25.Controllers
         ApplicationsController applicationsController;
         ContainersController containersController;
         DatasController datasController;
-        SubscriptionsController subscriptionsController;
         XmlValidator validator;
+        SubscriptionsController subscriptionsController;
 
         public SomiodController()
         {
@@ -138,7 +138,7 @@ namespace SOMIODd25.Controllers
                     return InternalServerError(ex);
                 }
             }
-            else 
+            else
             {
                 // If XML validation fails, provide a more descriptive error message
                 string validationErrorMessage = "XML validation failed. The following issues were found:\n";
@@ -154,7 +154,7 @@ namespace SOMIODd25.Controllers
         }
 
         [Route("{appName}")]
-        public IHttpActionResult PutApplication(string appName,[FromBody] XElement appXml)
+        public IHttpActionResult PutApplication(string appName, [FromBody] XElement appXml)
         {
             if (validator.ValidateXML(appXml.ToString()))
             {
@@ -179,7 +179,8 @@ namespace SOMIODd25.Controllers
                 {
                     return InternalServerError(ex);
                 }
-            } else { return BadRequest(); }
+            }
+            else { return BadRequest(); }
         }
 
         [Route("{appName}")]
@@ -299,7 +300,7 @@ namespace SOMIODd25.Controllers
             {
                 try
                 {
-                    if (containersController.PutContainer(appName ,containerName, containerXml.ToString()))
+                    if (containersController.PutContainer(appName, containerName, containerXml.ToString()))
                     {
                         Container container = containersController.DeserializeContainer(containerXml.ToString());
                         string xmlData = containersController.GetContainer(appName, containerName);
