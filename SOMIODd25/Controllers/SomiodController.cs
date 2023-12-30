@@ -14,6 +14,7 @@ using uPLibrary.Networking.M2Mqtt.Messages;
 using System.Text;
 using System.Xml;
 using System.Data.SqlTypes;
+using System.Security.Cryptography;
 
 namespace SOMIODd25.Controllers
 {
@@ -186,13 +187,50 @@ namespace SOMIODd25.Controllers
         [Route("{appName}")]
         public IHttpActionResult DeleteApplication(string appName)
         {
-
-            //Nao esta finalizado
-            //Quando uma application e eliminada deve se eliminar todos os dados dependentes desta
-            //Ou seja, eliminar os containers, a data, e as subscriptions
             try
             {
                 string xmlData = applicationsController.GetApplication(appName);
+                if (string.IsNullOrEmpty(xmlData))
+                {
+                    return NotFound(); // If the application doesn't exist
+                }
+
+                // Get all containers of the application
+                string containersXml = containersController.GetAllContainers(appName);
+                var containerNames = new List<string>(); 
+                XDocument doc = XDocument.Parse(containersXml);
+                foreach (XElement containerElement in doc.Descendants("Container"))
+                {
+                    string name = containerElement.Attribute("Name")?.Value;
+                    Console.WriteLine("Container to be deleted: " + name);
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        containerNames.Add(name);
+                    }
+                }
+
+                foreach (var containerName in containerNames)
+                {
+                    // Delete all data in the container
+                    string dataXml = datasController.GetAllData(appName, containerName);
+                    doc = XDocument.Parse(dataXml);
+                    foreach (XElement nameElement in doc.Descendants("Name"))
+                    {
+                        datasController.DeleteData(nameElement.Value, appName, containerName);
+                    }
+
+                    // Delete all subscriptions in the container
+                    string subscriptionsXml = subscriptionsController.GetAllSubscriptions(appName, containerName);
+                    doc = XDocument.Parse(subscriptionsXml);
+                    foreach (XElement nameElement in doc.Descendants("name"))
+                    {
+                        subscriptionsController.DeleteSubscrition(nameElement.Value, appName, containerName);
+                    }
+
+                    // Delete the container itself
+                    containersController.DeleteContainer(appName, containerName);
+                }
+
                 if (applicationsController.DeleteApplication(appName))
                 {
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)

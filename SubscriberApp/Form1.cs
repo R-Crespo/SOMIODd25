@@ -19,10 +19,12 @@ namespace SubscriberApp
     public partial class Form1 : Form
     {
         MqttClient mClient = new MqttClient(IPAddress.Parse("127.0.0.1")); //OR use the broker hostname
-        string[] mStrTopicsInfo = { "light_bulb" };
+        string[] mStrTopicsInfo = { "irrigation_sistem" };
         public Form1()
         {
             InitializeComponent();
+            pictureBox1.AutoSize = false;
+            pictureBox1.SizeMode = PictureBoxSizeMode.Zoom; // This will keep the PictureBox size constant
         }
         private void UpdateConnectionStatus(bool isConnected)
         {
@@ -54,8 +56,6 @@ namespace SubscriberApp
                 //Subscribe to topics
                 byte[] qosLevels = { MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE}; //QoS – depends on the topics number
                 mClient.Subscribe(mStrTopicsInfo, qosLevels);
-
-                pictureBox1.ImageLocation = "./light-bulb.png";
                 UpdateConnectionStatus(true);
             }
             catch (MqttClientException ex)
@@ -71,7 +71,7 @@ namespace SubscriberApp
 
         private async Task<bool> ApplicationExistsAsync()
         {
-            string applicationName = "Lighting";
+            string applicationName = "Irrigation";
             using (var client = new HttpClient())
             {
                 // Set the base address to the SOMIOD API
@@ -110,8 +110,8 @@ namespace SubscriberApp
 
         private async Task CreateResourcesAsync()
         {
-            string applicationXml = "<Application><Name>Lighting</Name></Application>";
-            string containerXml = "<Container><Name>light_bulb</Name></Container>";
+            string applicationXml = "<Application><Name>Irrigation</Name></Application>";
+            string containerXml = "<Container><Name>irrigation_sistem</Name></Container>";
             using (var client = new HttpClient())
             {
                 // Set the base address to the SOMIOD API
@@ -128,7 +128,7 @@ namespace SubscriberApp
                     return;
                 }
 
-                string appName = "Lighting";
+                string appName = "Irrigation";
                 // Create the container resource
                 HttpResponseMessage containerResponse = await client.PostAsync($"{appName}", new StringContent(containerXml, Encoding.UTF8, "application/xml"));
                 if (!containerResponse.IsSuccessStatusCode)
@@ -152,14 +152,13 @@ namespace SubscriberApp
                     string texto = "Received = " + msg + " on topic " + e.Topic;
                     if (msg == "off")
                     {
-                        pictureBox1.ImageLocation = "./light-bulb.png";
+                        pictureBox1.Image = Properties.Resources.irrigation_off_;
                     }
                     else if (msg == "on")
                     {
-                        pictureBox1.ImageLocation = "./light-bulb (1).png";
+                        pictureBox1.Image = Properties.Resources.irrigation_on_;
                     }
                     pictureBox1.SizeMode = PictureBoxSizeMode.AutoSize;
-                    MessageBox.Show(texto);
                 });
             }
             catch (Exception ex)
