@@ -243,7 +243,7 @@ namespace SOMIODd25.Controllers
                     {
                         throw new KeyNotFoundException("Application not found.");
                     }
-                    string query = "DELETE FROM Containers WHERE Name = @name Parent = @parent";
+                    string query = "DELETE FROM Containers WHERE Name = @name AND Parent = @parent";
                     using (SqlCommand command = new SqlCommand(query, conn))
                     {
                         command.Parameters.AddWithValue("@name", containerName);

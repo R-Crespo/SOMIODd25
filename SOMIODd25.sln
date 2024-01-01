@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOMIODd25", "SOMIODd25\SOMI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubscriberApp", "SubscriberApp\SubscriberApp.csproj", "{B5FE5B45-2E26-43D9-A809-9F9F16108C59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublisherApp", "AppB\PublisherApp.csproj", "{D5AFB6A4-1EAE-4E83-9BE9-21FAC7C12DB9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublisherApp", "AppB\PublisherApp.csproj", "{B95C8120-048B-4910-8F74-A66A7EAC5522}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
