@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOMIODd25", "SOMIODd25\SOMIODd25.csproj", "{59C73D8D-3470-41C3-A1B7-2EF1DECF28F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppB", "AppB\AppB.csproj", "{D5AFB6A4-1EAE-4E83-9BE9-21FAC7C12DB9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublisherApp", "AppB\PublisherApp.csproj", "{D5AFB6A4-1EAE-4E83-9BE9-21FAC7C12DB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
