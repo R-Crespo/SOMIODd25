@@ -378,6 +378,21 @@ namespace SOMIODd25.Controllers
 
             try
             {
+                // Delete all data in the container
+                string dataXml = datasController.GetAllData(appName, containerName);
+                XDocument doc = XDocument.Parse(dataXml);
+                foreach (XElement nameElement in doc.Descendants("name"))
+                {
+                    datasController.DeleteData(nameElement.Value, appName, containerName);
+                }
+
+                // Delete all subscriptions in the container
+                string subscriptionsXml = subscriptionsController.GetAllSubscriptions(appName, containerName);
+                doc = XDocument.Parse(subscriptionsXml);
+                foreach (XElement nameElement in doc.Descendants("name"))
+                {
+                    subscriptionsController.DeleteSubscrition(nameElement.Value, appName, containerName);
+                }
                 // Assuming the ContainersController.DeleteContainer method returns true if the deletion is successful
                 if (containersController.DeleteContainer(appName, containerName))
                 {
