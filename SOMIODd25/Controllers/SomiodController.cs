@@ -16,6 +16,7 @@ using System.Xml;
 using System.Data.SqlTypes;
 using System.Security.Cryptography;
 
+
 namespace SOMIODd25.Controllers
 {
     [RoutePrefix("api/somiod")]
@@ -587,7 +588,6 @@ namespace SOMIODd25.Controllers
                 {
                     client.Publish(topic, Encoding.UTF8.GetBytes(message));
                 }
-            }
             catch (Exception ex)
             {
                 // Handle any exceptions here
@@ -601,6 +601,33 @@ namespace SOMIODd25.Controllers
                 }
             }
         }
+
+        private void PublishToMqtt(string topic, string message)
+        {
+            MqttClient client = new MqttClient(IPAddress.Parse("127.0.0.1")); // Replace with your MQTT broker address
+
+            try
+            {
+                client.Connect(Guid.NewGuid().ToString());
+                if (client.IsConnected)
+                {
+                    client.Publish(topic, Encoding.UTF8.GetBytes(message));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in MQTT Publish: " + ex.Message);
+                return InternalServerError(ex);
+            }
+            finally
+            {
+                if (client.IsConnected)
+                {
+                    client.Disconnect();
+                }
+            }
+        }
+
     }
 
 }
