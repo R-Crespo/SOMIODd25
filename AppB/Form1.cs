@@ -26,6 +26,15 @@ namespace AppB
             mqttClient = new MqttClient("127.0.0.1"); // Use the correct IP address for your MQTT broker
         }
 
+        private void UpdateConnectionStatus(bool isConnected)
+        {
+            // This ensures the update is thread-safe and happens on the UI thread
+            connectionStatusPanel.Invoke((MethodInvoker)delegate
+            {
+                connectionStatusPanel.BackColor = isConnected ? Color.Green : Color.Red;
+            });
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             // Connect to the MQTT broker
@@ -35,11 +44,8 @@ namespace AppB
                 MessageBox.Show("Error connecting to message broker...");
                 return;
             }
-            MessageBox.Show("Connected to the broker successfully");
+            UpdateConnectionStatus(true);
         }
-
-
-
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -59,8 +65,7 @@ namespace AppB
             if (mqttClient.IsConnected)
             {
                 // The topic "light_bulb" should match the topic the subscriber is listening to.
-                mqttClient.Publish("light_bulb", Encoding.UTF8.GetBytes(message));
-                MessageBox.Show($"Message '{message}' published to topic 'light_bulb'");
+                mqttClient.Publish("irrigation_sistem", Encoding.UTF8.GetBytes(message));
             }
             else
             {
@@ -73,10 +78,9 @@ namespace AppB
             // Disconnect from the MQTT broker when the form is closing
             if (mqttClient.IsConnected)
             {
+                UpdateConnectionStatus(false);
                 mqttClient.Disconnect();
             }
         }
-
-
     }
 }
